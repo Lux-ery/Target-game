@@ -1,0 +1,67 @@
+🚀 GUÍA RÁPIDA PARA HACER TU JUEGO PÚBLICO
+===============================================
+
+📱 Tu juego "Circle Tap" está listo para ser una página web pública.
+
+🎯 OPCIÓN MÁS FÁCIL - GITHUB PAGES:
+===================================
+
+1. Ve a https://github.com
+2. Crea una cuenta gratis si no tienes
+3. Haz clic en "New repository" (repositorio nuevo)
+4. Nombre: "circle-tap-game" (o el que quieras)
+5. Marca "Public" y "Add README"
+6. Haz clic en "Create repository"
+
+7. En tu nuevo repositorio:
+   - Haz clic en "uploading an existing file"
+   - Arrastra TODOS estos archivos:
+     * index.html
+     * style.css  
+     * script.js
+     * manifest.json
+     * sw.js
+   - Escribe "Initial game upload" en el mensaje
+   - Haz clic en "Commit changes"
+
+8. Ve a Settings (configuración) del repositorio
+9. Scroll down hasta "Pages"
+10. En "Source" selecciona "Deploy from a branch"
+11. Branch: "main", Folder: "/ (root)"
+12. Haz clic en "Save"
+
+¡LISTO! En 5-10 minutos tu juego estará en:
+https://tu-usuario.github.io/circle-tap-game
+
+🌟 ALTERNATIVAS SÚPER RÁPIDAS:
+==============================
+
+NETLIFY (arrastra y suelta):
+- Ve a netlify.com
+- Arrastra la carpeta completa del juego
+- ¡Instantáneo!
+
+VERCEL (similar a Netlify):
+- Ve a vercel.com  
+- Sube la carpeta
+- ¡Online al momento!
+
+🎮 TU JUEGO INCLUYE:
+===================
+✅ Modo Clásico (supervivencia 30 segundos)
+✅ VS Máquina (4 dificultades)
+✅ Sistema de usuarios con auto-login
+✅ Tabla de récords
+✅ PWA (se puede instalar como app)
+✅ Funciona offline después de primera carga
+✅ Optimizado para móviles
+
+📱 COMPARTIR:
+============
+Una vez online, solo comparte la URL y cualquiera podrá:
+- Jugar desde cualquier dispositivo
+- Instalarlo como app en el móvil
+- Competir y establecer récords
+- Jugar sin internet (después de la primera vez)
+
+¡Tu juego está listo para el mundo! 🌍
