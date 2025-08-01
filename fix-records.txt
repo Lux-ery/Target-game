@@ -1,0 +1,36 @@
+🔧 ARREGLO RÁPIDO PARA TABLAS DE RÉCORDS
+==========================================
+
+PROBLEMA DETECTADO:
+- Las tablas de récords se cortan en la parte superior
+- Los botones se solapan con el contenido
+- Falta scroll suave en móviles
+
+SOLUCIÓN APLICADA:
+✅ #records-screen ahora tiene altura completa (100vh)
+✅ .records-container tiene scroll interno con padding-bottom
+✅ .records-actions están fijos en la parte inferior
+✅ Mejorado el responsive para móviles
+✅ Añadido -webkit-overflow-scrolling: touch para iOS
+
+CAMBIOS ESPECÍFICOS:
+1. records-screen: height: 100vh + flex layout
+2. records-container: overflow-y: auto + padding-bottom: 100px
+3. records-actions: position: fixed + bottom: 20px
+4. records-entries: max-height: 300px (era 200px)
+5. Mejor responsive para pantallas pequeñas
+
+INSTRUCCIONES:
+- Los cambios ya están aplicados en style.css
+- Recarga la página web y ve a "Récords"
+- Ahora deberías poder ver todas las tablas completas
+- Los botones están fijos abajo y no se solapan
+
+VERIFICACIÓN:
+✓ ¿Se ven todas las pestañas de dificultad?
+✓ ¿Puedes hacer scroll en las tablas?
+✓ ¿Los botones están siempre visibles abajo?
+✓ ¿Funciona bien en móvil?
+
+Si aún hay problemas, usar la versión index-completo.html
+que tiene todo integrado y funcionando.

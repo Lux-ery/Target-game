@@ -109,11 +109,13 @@
             </div>
             <p>¡Toca los círculos antes de que desaparezcan!</p>
             <button id="classic-btn" class="btn">🎮 Modo Clásico</button>
+            <button id="rapid-btn" class="btn rapid">⚡ Modo Rápido</button>
             <button id="vs-machine-btn" class="btn secondary">🤖 VS Máquina</button>
             <button id="records-btn" class="btn tertiary">🏆 Récords</button>
             <div class="instructions">
                 <p>📱 Optimizado para móviles</p>
                 <p>🎮 Toca rápido para conseguir puntos</p>
+                <p>⚡ Modo Rápido: PC (pasar mouse) | Móvil (tocar)</p>
             </div>
         </div>
 
@@ -225,6 +227,26 @@
                             <span></span>
                         </div>
                         <div id="classic-records-list" class="records-entries">
+                            <!-- Se llenará dinámicamente -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Récords Modo Rápido -->
+                <div class="records-section">
+                    <h3>⚡ Modo Rápido</h3>
+                    <div class="record-item best-rapid">
+                        <div class="record-label">🥇 Mejor Puntuación</div>
+                        <div class="record-value" id="best-rapid-score">0</div>
+                    </div>
+                    <div class="records-list">
+                        <div class="records-header rapid">
+                            <span>Pos.</span>
+                            <span>Usuario</span>
+                            <span>Puntuación</span>
+                            <span>Tiempo</span>
+                        </div>
+                        <div id="rapid-records-list" class="records-entries">
                             <!-- Se llenará dinámicamente -->
                         </div>
                     </div>

@@ -8,10 +8,11 @@ body {
     font-family: 'Arial', sans-serif;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    overflow: hidden;
+    overflow: auto;
     user-select: none;
     -webkit-user-select: none;
     -webkit-touch-callout: none;
+    min-height: 100vh;
 }
 
 .game-container {
@@ -31,10 +32,18 @@ body {
     justify-content: center;
     align-items: center;
     transition: opacity 0.3s ease;
+    z-index: 1;
+}
+
+.screen.hidden {
+    display: none !important;
+    visibility: hidden;
+    opacity: 0;
+    z-index: -1;
 }
 
 .hidden {
-    display: none;
+    display: none !important;
 }
 
 /* Pantalla de inicio */
@@ -95,6 +104,10 @@ body {
 
 .btn.secondary {
     background: linear-gradient(45deg, #74b9ff, #0984e3);
+}
+
+.btn.rapid {
+    background: linear-gradient(45deg, #fdcb6e, #e17055);
 }
 
 .btn.tertiary {
@@ -375,6 +388,37 @@ body {
     100% { transform: scale(0.5); opacity: 0; }
 }
 
+/* Círculos rápidos - Modo hover */
+.circle.rapid-circle {
+    border: 3px solid #fdcb6e;
+    background: linear-gradient(45deg, #fdcb6e, #e17055);
+    box-shadow: 
+        0 0 20px rgba(253, 203, 110, 0.6),
+        inset 0 0 10px rgba(255, 255, 255, 0.3);
+    animation: rapid-pulse 1.5s infinite;
+}
+
+@keyframes rapid-pulse {
+    0%, 100% { 
+        transform: scale(1);
+        box-shadow: 0 0 20px rgba(253, 203, 110, 0.6);
+    }
+    50% { 
+        transform: scale(1.05);
+        box-shadow: 0 0 30px rgba(253, 203, 110, 0.8);
+    }
+}
+
+.circle.rapid-circle:hover {
+    animation: rapid-hover 0.3s ease-out forwards;
+}
+
+@keyframes rapid-hover {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.8; }
+    100% { transform: scale(0); opacity: 0; }
+}
+
 /* Efectos de puntuación */
 .score-popup {
     position: absolute;
@@ -528,6 +572,41 @@ body {
     }
 }
 
+/* Media query para ventanas pequeñas o muy verticales */
+@media (max-height: 600px), (max-width: 400px) {
+    .screen {
+        overflow-y: auto;
+        padding: 20px;
+        justify-content: flex-start;
+    }
+    
+    #start-screen {
+        min-height: 100vh;
+        padding: 20px 0;
+    }
+    
+    #start-screen h1 {
+        font-size: 1.8rem;
+        margin-bottom: 1rem;
+    }
+    
+    .btn {
+        font-size: 1rem;
+        padding: 8px 16px;
+        margin: 5px 0;
+        min-width: 140px;
+    }
+    
+    .instructions {
+        margin-top: 1rem;
+    }
+    
+    .instructions p {
+        font-size: 0.9rem;
+        margin: 0.3rem 0;
+    }
+}
+
 /* Prevenir zoom en iOS */
 input, button, select, textarea {
     font-size: 16px;
@@ -605,23 +684,38 @@ body {
    ============================================================================ */
 
 #records-screen {
-    padding: 20px;
+    padding: 15px;
     overflow-y: auto;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    z-index: 10;
+}
+
+#records-screen.hidden {
+    display: none !important;
+    visibility: hidden;
+    opacity: 0;
+    z-index: -1;
 }
 
 #records-screen h2 {
-    font-size: 2.5rem;
-    margin-bottom: 1.5rem;
+    font-size: 2rem;
+    margin-bottom: 1rem;
     text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
     text-align: center;
+    flex-shrink: 0;
 }
 
 .records-container {
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: 1.5rem;
     max-width: 800px;
     margin: 0 auto;
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 100px; /* Espacio para botones */
 }
 
 .records-section {
@@ -654,6 +748,11 @@ body {
 
 .best-classic {
     border-left: 4px solid #00b894;
+}
+
+.best-rapid {
+    border-left: 4px solid #fdcb6e;
+    background: linear-gradient(135deg, rgba(253, 203, 110, 0.1), rgba(225, 112, 85, 0.1));
 }
 
 .best-vs {
@@ -716,17 +815,26 @@ body {
     grid-template-columns: 50px 1fr 100px 30px;
 }
 
+.records-header.rapid {
+    grid-template-columns: 50px 1fr 100px 80px;
+    background: linear-gradient(135deg, rgba(253, 203, 110, 0.2), rgba(225, 112, 85, 0.2));
+    border: 1px solid rgba(253, 203, 110, 0.3);
+}
+
 .records-entries {
-    max-height: 200px;
+    max-height: 300px;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
 .record-entry {
     display: grid;
     grid-template-columns: 50px 1fr 80px 80px;
-    padding: 8px 10px;
+    padding: 12px 10px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     font-size: 0.9rem;
+    min-height: 50px;
+    align-items: center;
 }
 
 .record-entry:last-child {
@@ -774,10 +882,18 @@ body {
 }
 
 .records-actions {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
     justify-content: center;
     gap: 15px;
-    margin-top: 2rem;
+    z-index: 1000;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 10px 20px;
+    border-radius: 25px;
+    backdrop-filter: blur(10px);
 }
 
 .empty-records {
@@ -789,15 +905,71 @@ body {
 
 /* Responsive para récords */
 @media (max-width: 480px) {
+    #records-screen {
+        padding: 10px;
+    }
+    
+    #records-screen h2 {
+        font-size: 1.8rem;
+        margin-bottom: 0.5rem;
+    }
+    
     .records-container {
-        padding: 0 10px;
+        gap: 1rem;
+        padding-bottom: 120px;
+    }
+    
+    .records-section {
+        padding: 15px;
+    }
+    
+    .records-section h3 {
+        font-size: 1.4rem;
+        margin-bottom: 0.8rem;
     }
     
     .records-header,
-    .record-entry {
-        grid-template-columns: 40px 1fr 60px 60px;
+    .record-entry,
+    .record-item {
+        grid-template-columns: 35px 1fr 50px 50px;
+        font-size: 0.75rem;
+        padding: 10px 8px;
+    }
+    
+    .records-header.classic,
+    .record-item.classic {
+        grid-template-columns: 35px 1fr 60px 30px;
+    }
+    
+    .record-value {
+        font-size: 1.1rem;
+    }
+    
+    .stat-item {
+        padding: 8px;
+    }
+    
+    .stat-label {
         font-size: 0.8rem;
     }
+    
+    .stat-value {
+        font-size: 1rem;
+    }
+    
+    .vs-stats {
+        gap: 8px;
+    }
+    
+    .records-entries {
+        max-height: 250px;
+    }
+    
+    .records-actions {
+        bottom: 15px;
+        padding: 8px 15px;
+    }
+}
     
     .vs-stats {
         grid-template-columns: 1fr;

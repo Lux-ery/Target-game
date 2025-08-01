@@ -117,6 +117,17 @@ const GAME_CONFIG = {
         CIRCLE_LIFETIME_MIN: 3000,         // Aumentado de 2000 a 3000ms
         MAINTENANCE_INTERVAL: 500          // Aumentado de 200 a 500ms
     },
+    RAPID: {
+        TIME_LIMIT: 20,                    // Modo más corto y rápido
+        MAX_CIRCLES: 7,                    // 7 círculos simultáneos
+        DIFFICULTY_INCREASE_INTERVAL: 5,   // Aumenta dificultad más rápido
+        DIFFICULTY_MULTIPLIER: 0.4,        // Incremento mayor
+        CIRCLE_LIFETIME_BASE: 3000,        // Círculos duran menos
+        CIRCLE_LIFETIME_REDUCTION: 150,    // Reducción más agresiva
+        CIRCLE_LIFETIME_MIN: 1500,         // Mínimo muy bajo
+        MAINTENANCE_INTERVAL: 300,         // Mantenimiento más frecuente
+        SPAWN_RATE: 400                    // Aparecen muy rápido
+    },
     VS_MACHINE: {
         TIME_LIMIT: 60,
         CIRCLE_SIZE: 80,
@@ -239,13 +250,20 @@ class ScreenManager {
     }
 
     showScreen(screenName) {
+        console.log('� Mostrando pantalla:', screenName);
+        
         try {
-            Object.values(this.screens).forEach(screen => {
-                if (screen) screen.classList.add('hidden');
+            // Ocultar todas las pantallas
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.add('hidden');
             });
             
-            if (this.screens[screenName]) {
-                this.screens[screenName].classList.remove('hidden');
+            // Mostrar la pantalla solicitada
+            const targetScreen = document.getElementById(screenName + '-screen');
+            if (targetScreen) {
+                targetScreen.classList.remove('hidden');
+            } else {
+                console.error('Pantalla no encontrada:', screenName);
             }
         } catch (error) {
             console.error('Error mostrando pantalla:', error);
@@ -253,8 +271,8 @@ class ScreenManager {
     }
 
     hideAllScreens() {
-        Object.values(this.screens).forEach(screen => {
-            if (screen) screen.classList.add('hidden');
+        document.querySelectorAll('.screen').forEach(screen => {
+            screen.classList.add('hidden');
         });
     }
 }
@@ -430,12 +448,16 @@ class CircleManager {
     }
 
     createVsCircle() {
+        console.log('🔵 CREANDO CÍRCULO VS');
         try {
             const circle = document.createElement('div');
             circle.classList.add('circle');
             
             const size = GAME_CONFIG.VS_MACHINE.CIRCLE_SIZE;
+            console.log('📏 Tamaño del círculo:', size);
+            
             const position = GameUtils.generateRandomPosition(size, 120);
+            console.log('📍 Posición generada:', position);
             
             this.setupCircleStyle(circle, size, position);
             
@@ -445,14 +467,58 @@ class CircleManager {
             
             this.attachVsEvents(circle);
             
+            console.log('🎯 Área del juego VS:', this.game.elements.vsGameArea);
             this.game.elements.vsGameArea.appendChild(circle);
             this.circles.push(circle);
+            
+            console.log('✅ Círculo VS creado y agregado');
+            console.log('📊 Total de círculos activos:', this.circles.length);
             
             setTimeout(() => this.autoRemoveVsCircle(circle), GAME_CONFIG.VS_MACHINE.CIRCLE_LIFETIME);
             
             return circle;
         } catch (error) {
             console.error('Error creando círculo VS:', error);
+            return null;
+        }
+    }
+
+    createRapidCircle() {
+        try {
+            const circle = document.createElement('div');
+            circle.classList.add('circle', 'rapid-circle');
+            
+            // Configuración para modo rápido
+            const minSize = 60; // Círculos más grandes para mejor hover
+            const maxSize = 100;
+            const size = Math.random() * (maxSize - minSize) + minSize;
+            
+            const position = GameUtils.generateRandomPosition(size, 100);
+            this.setupCircleStyle(circle, size, position);
+            
+            // Todos los círculos valen 1 punto en modo rápido
+            const points = 1;
+            circle.textContent = points;
+            circle.dataset.points = points;
+            circle.dataset.mode = 'rapid';
+            
+            // Eventos especiales para modo rápido
+            this.attachRapidEvents(circle);
+            
+            this.game.elements.gameArea.appendChild(circle);
+            this.circles.push(circle);
+            
+            // Tiempo de vida dinámico basado en dificultad
+            const lifetime = Math.max(
+                GAME_CONFIG.RAPID.CIRCLE_LIFETIME_BASE - (this.game.gameState.difficulty * GAME_CONFIG.RAPID.CIRCLE_LIFETIME_REDUCTION),
+                GAME_CONFIG.RAPID.CIRCLE_LIFETIME_MIN
+            );
+            
+            setTimeout(() => this.autoRemoveCircle(circle), lifetime);
+            
+            return circle;
+        } catch (error) {
+            console.error('Error creando círculo rápido:', error);
             return null;
         }
     }
@@ -483,6 +549,28 @@ class CircleManager {
             GameUtils.preventDefaultTouch(e);
             clickHandler(e);
         });
+    }
+
+    attachRapidEvents(circle) {
+        let triggered = false;
+        
+        const triggerHandler = (e) => {
+            if (triggered) return;
+            triggered = true;
+            
+            e.preventDefault();
+            e.stopPropagation();
+            this.game.handleCircleHit(e, circle);
+        };
+        
+        // Para escritorio: hover (pasar el mouse)
+        circle.addEventListener('mouseenter', triggerHandler);
+        
+        // Para móviles: tocar la pantalla
+        circle.addEventListener('touchstart', triggerHandler, { passive: false });
+        
+        // Respaldo con click para ambos
+        circle.addEventListener('click', triggerHandler);
     }
 
     autoRemoveCircle(circle) {
@@ -663,6 +751,7 @@ class RecordsManager {
     loadRecords() {
         try {
             this.classicRecords = JSON.parse(localStorage.getItem('circletap_classic_records')) || [];
+            this.rapidRecords = JSON.parse(localStorage.getItem('circletap_rapid_records')) || [];
             this.vsRecords = JSON.parse(localStorage.getItem('circletap_vs_records')) || {
                 principiante: [],
                 intermedio: [],
@@ -698,6 +787,7 @@ class RecordsManager {
             localStorage.setItem('circletap_classic_records', JSON.stringify(this.classicRecords));
             localStorage.setItem('circletap_vs_records', JSON.stringify(this.vsRecords));
             localStorage.setItem('circletap_vs_stats', JSON.stringify(this.vsStats));
+            localStorage.setItem('circletap_rapid_records', JSON.stringify(this.rapidRecords));
         } catch (error) {
             console.error('Error guardando récords:', error);
         }
@@ -720,6 +810,26 @@ class RecordsManager {
         
         this.saveRecords();
         return this.classicRecords.findIndex(r => r.timestamp === record.timestamp) + 1;
+    }
+
+    addRapidRecord(score) {
+        const currentUser = this.authManager.getCurrentUser();
+        if (!currentUser) return -1;
+
+        const record = {
+            score: score,
+            user: currentUser,
+            date: new Date().toLocaleDateString('es-ES'),
+            time: new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }),
+            timestamp: Date.now()
+        };
+
+        this.rapidRecords.push(record);
+        this.rapidRecords.sort((a, b) => b.score - a.score);
+        this.rapidRecords = this.rapidRecords.slice(0, 10);
+        
+        this.saveRecords();
+        return this.rapidRecords.findIndex(r => r.timestamp === record.timestamp) + 1;
     }
 
     addVsRecord(playerScore, machineScore, difficulty) {
@@ -775,6 +885,7 @@ class RecordsManager {
 
     updateRecordsDisplay() {
         this.updateClassicRecords();
+        this.updateRapidRecords();
         this.updateVsRecords();
     }
 
@@ -797,6 +908,28 @@ class RecordsManager {
                 <span></span>
             `;
             this.elements.classicRecordsList.appendChild(recordElement);
+        });
+    }
+
+    updateRapidRecords() {
+        if (!this.elements.bestRapidScore || !this.elements.rapidRecordsList) return;
+
+        // Mejor puntuación rápida
+        const bestRapid = this.rapidRecords.length > 0 ? this.rapidRecords[0].score : 0;
+        this.elements.bestRapidScore.textContent = bestRapid;
+
+        // Lista de récords rápidos
+        this.elements.rapidRecordsList.innerHTML = '';
+        this.rapidRecords.forEach((record, index) => {
+            const recordElement = document.createElement('div');
+            recordElement.className = 'record-item rapid';
+            recordElement.innerHTML = `
+                <span>${index + 1}</span>
+                <span>${record.user}</span>
+                <span>${record.score}</span>
+                <span>${record.time}</span>
+            `;
+            this.elements.rapidRecordsList.appendChild(recordElement);
         });
     }
 
@@ -977,6 +1110,86 @@ class UIManager {
 }
 
 // ============================================================================
+// Función global para probar el final del juego
+window.testGameOver = function() {
+    console.log('🧪 PROBANDO GAME OVER MANUALMENTE');
+    if (window.game) {
+        window.game.endGame();
+    } else {
+        console.error('❌ Juego no disponible');
+    }
+};
+
+// Función para verificar estado del juego
+window.checkGameState = function() {
+    console.log('🎮 ESTADO DEL JUEGO:');
+    if (window.game) {
+        console.log('- Game existe:', !!window.game);
+        console.log('- Game state:', window.game.gameState);
+        console.log('- Running:', window.game.gameState?.running);
+        console.log('- Mode:', window.game.gameState?.mode);
+        console.log('- VS Time Left:', window.game.gameState?.vsTimeLeft);
+        console.log('- Elements VS Area:', window.game.elements?.vsGameArea);
+    } else {
+        console.log('❌ Game no existe');
+    }
+};
+
+// Función para forzar crear un círculo VS
+window.forceCreateVsCircle = function() {
+    console.log('🔵 FORZANDO CREACIÓN DE CÍRCULO VS');
+    if (window.game && window.game.circleManager) {
+        window.game.circleManager.createVsCircle();
+    } else {
+        console.log('❌ No se puede crear círculo - game o circleManager no disponible');
+    }
+};
+
+// Función de test paso a paso
+window.stepByStepVsTest = function() {
+    console.log('🧪 TEST PASO A PASO VS MÁQUINA');
+    
+    if (!window.game) {
+        console.log('❌ Game no disponible');
+        return;
+    }
+    
+    console.log('1️⃣ Reseteando estado...');
+    window.game.resetGameState('vs-machine', 1);
+    
+    console.log('2️⃣ Verificando estado...');
+    checkGameState();
+    
+    console.log('3️⃣ Mostrando pantalla VS...');
+    window.game.showVsGameScreen();
+    
+    console.log('4️⃣ Limpiando círculos...');
+    window.game.circleManager.clearAll();
+    
+    console.log('5️⃣ Creando círculo manualmente...');
+    forceCreateVsCircle();
+    
+    console.log('✅ Test completado');
+};
+
+// Función para probar el modo VS
+window.testVsMode = function() {
+    console.log('🧪 PROBANDO MODO VS MANUALMENTE');
+    if (window.game) {
+        window.game.startVsMachineGame(1); // Dificultad fácil
+    } else {
+        console.error('❌ Juego no disponible');
+    }
+};
+
+// Función para verificar elementos del DOM
+window.checkVsElements = function() {
+    console.log('🔍 VERIFICANDO ELEMENTOS VS:');
+    const vsGameArea = document.getElementById('vs-game-area');
+    console.log('- vs-game-area:', vsGameArea);
+    console.log('- vs-game-area children:', vsGameArea ? vsGameArea.children.length : 'No encontrado');
+};
+
 // CLASE PRINCIPAL DEL JUEGO
 // ============================================================================
 
@@ -1019,6 +1232,7 @@ class CircleTapGame {
             
             // Botones principales
             classicBtn: document.getElementById('classic-btn'),
+            rapidBtn: document.getElementById('rapid-btn'),
             vsMachineBtn: document.getElementById('vs-machine-btn'),
             backBtn: document.getElementById('back-btn'),
             restartBtn: document.getElementById('restart-btn'),
@@ -1053,8 +1267,10 @@ class CircleTapGame {
             
             // Elementos de récords
             bestClassicScore: document.getElementById('best-classic-score'),
+            bestRapidScore: document.getElementById('best-rapid-score'),
             bestVsScore: document.getElementById('best-vs-score'),
             classicRecordsList: document.getElementById('classic-records-list'),
+            rapidRecordsList: document.getElementById('rapid-records-list'),
             vsRecordsList: document.getElementById('vs-records-list'),
             vsWins: document.getElementById('vs-wins'),
             vsLosses: document.getElementById('vs-losses'),
@@ -1105,10 +1321,17 @@ class CircleTapGame {
 
             // Eventos principales
             this.elements.classicBtn?.addEventListener('click', () => this.startClassicGame());
+            this.elements.rapidBtn?.addEventListener('click', () => this.startRapidGame());
             this.elements.vsMachineBtn?.addEventListener('click', () => this.showDifficultyScreen());
             this.elements.recordsBtn?.addEventListener('click', () => this.showRecordsScreen());
             this.elements.backBtn?.addEventListener('click', () => this.showStartScreen());
-            this.elements.restartBtn?.addEventListener('click', () => this.startClassicGame());
+            this.elements.restartBtn?.addEventListener('click', () => {
+                if (this.gameState.mode === 'rapid') {
+                    this.startRapidGame();
+                } else {
+                    this.startClassicGame();
+                }
+            });
             this.elements.menuBtn?.addEventListener('click', () => this.showStartScreen());
             this.elements.vsRestartBtn?.addEventListener('click', () => this.restartVsGame());
             this.elements.vsMenuBtn?.addEventListener('click', () => this.showStartScreen());
@@ -1118,6 +1341,7 @@ class CircleTapGame {
             this.elements.difficultyBtns.forEach(btn => {
                 btn.addEventListener('click', () => {
                     const difficulty = parseInt(btn.dataset.difficulty);
+                    console.log('🎯 BOTÓN DE DIFICULTAD PRESIONADO:', difficulty);
                     this.startVsMachineGame(difficulty);
                 });
             });
@@ -1173,19 +1397,43 @@ class CircleTapGame {
     }
 
     showVsGameScreen() {
-        this.screenManager.showScreen('vsGame');
+        console.log('🤖 MOSTRANDO PANTALLA VS GAME');
+        this.screenManager.showScreen('vs-game');
         // Mostrar cursor para modo VS
         this.circleManager.showMachineCursorForVsMode();
+        console.log('✅ Pantalla VS game mostrada');
     }
 
     showGameOverScreen() {
+        console.log('🎮 ENTRANDO A showGameOverScreen');
+        console.log('📊 Puntuación final:', this.gameState.score);
+        
         this.uiManager.showFinalScore(this.gameState.score);
+        console.log('✅ Final score actualizado en UI');
+        
+        console.log('🚀 Llamando a screenManager.showScreen("gameOver")');
         this.screenManager.showScreen('gameOver');
+        
+        // Verificación adicional - forzar mostrar la pantalla si no se muestra
+        setTimeout(() => {
+            const gameOverScreen = document.getElementById('game-over-screen');
+            if (gameOverScreen && gameOverScreen.classList.contains('hidden')) {
+                console.log('⚠️ Pantalla game-over aún oculta, forzando visualización...');
+                gameOverScreen.classList.remove('hidden');
+                console.log('🔧 Pantalla game-over forzada a mostrarse');
+            } else {
+                console.log('✅ Pantalla game-over se muestra correctamente');
+            }
+        }, 100);
+        
+        console.log('✅ showGameOverScreen completado');
     }
 
     showVsResultScreen() {
+        console.log('🏆 MOSTRANDO RESULTADO VS');
         this.uiManager.showVsResult(this.gameState.playerScore, this.gameState.machineScore);
-        this.screenManager.showScreen('vsResult');
+        this.screenManager.showScreen('vs-result');
+        console.log('✅ Resultado VS mostrado');
     }
 
     showRecordsScreen() {
@@ -1208,15 +1456,31 @@ class CircleTapGame {
         this.startCircleMaintenance();
     }
 
+    startRapidGame() {
+        console.log('⚡ INICIANDO MODO RÁPIDO');
+        this.resetGameState('rapid');
+        this.showGameScreen();
+        this.circleManager.clearAll();
+        
+        this.startRapidTimers();
+        this.startRapidSpawning();
+        console.log('✅ Modo rápido iniciado');
+    }
+
     startVsMachineGame(difficulty) {
+        console.log('🤖 INICIANDO MODO VS MÁQUINA, dificultad:', difficulty);
         this.resetGameState('vs-machine', difficulty);
         this.uiManager.setupVsDifficulty(difficulty);
         this.showVsGameScreen();
         this.circleManager.clearAll();
         
+        console.log('🕐 Iniciando timers VS...');
         this.startVsTimers();
+        console.log('🎯 Iniciando spawn de círculos...');
         this.startVsSpawning();
+        console.log('🤖 Iniciando IA de la máquina...');
         this.startMachineAI();
+        console.log('✅ Modo VS máquina iniciado completamente');
     }
 
     restartVsGame() {
@@ -1224,6 +1488,7 @@ class CircleTapGame {
     }
 
     resetGameState(mode, difficulty = 1) {
+        console.log('🔄 RESETEANDO ESTADO DEL JUEGO:', mode, 'dificultad:', difficulty);
         this.gameState.mode = mode;
         this.gameState.running = true;
         this.gameState.difficulty = 1;
@@ -1231,13 +1496,20 @@ class CircleTapGame {
         if (mode === 'classic') {
             this.gameState.score = 0;
             this.gameState.timeLeft = GAME_CONFIG.CLASSIC.TIME_LIMIT;
+            console.log('✅ Estado clásico inicializado - Score:', this.gameState.score, 'Time:', this.gameState.timeLeft);
+        } else if (mode === 'rapid') {
+            this.gameState.score = 0;
+            this.gameState.timeLeft = GAME_CONFIG.RAPID.TIME_LIMIT;
+            console.log('✅ Estado rápido inicializado - Score:', this.gameState.score, 'Time:', this.gameState.timeLeft);
         } else {
             this.gameState.playerScore = 0;
             this.gameState.machineScore = 0;
             this.gameState.machineDifficulty = difficulty;
             this.gameState.vsTimeLeft = GAME_CONFIG.VS_MACHINE.TIME_LIMIT;
             this.gameState.machineSpeedMultiplier = 1; // Inicializar multiplicador
+            console.log('✅ Estado VS inicializado - Player:', this.gameState.playerScore, 'Machine:', this.gameState.machineScore, 'Time:', this.gameState.vsTimeLeft);
         }
+        console.log('🎮 Estado final running:', this.gameState.running);
     }
 
     // ========================================================================
@@ -1251,7 +1523,10 @@ class CircleTapGame {
             this.gameState.timeLeft--;
             this.uiManager.updateClassicUI(this.gameState.score, this.gameState.timeLeft);
             
+            console.log('⏱️ Tiempo restante:', this.gameState.timeLeft);
+            
             if (this.gameState.timeLeft <= 0) {
+                console.log('⏰ TIEMPO AGOTADO - Llamando endGame()');
                 this.endGame();
                 return;
             }
@@ -1264,11 +1539,43 @@ class CircleTapGame {
         }, 1000);
     }
 
+    startRapidTimers() {
+        console.log('⚡ INICIANDO TIMER RÁPIDO');
+        console.log('🕐 Tiempo inicial rápido:', this.gameState.timeLeft);
+        
+        this.timerManager.startTimer('rapidTimer', () => {
+            if (!this.gameState.running) return;
+            
+            this.gameState.timeLeft--;
+            this.uiManager.updateClassicUI(this.gameState.score, this.gameState.timeLeft);
+            
+            console.log('⏱️ Tiempo rápido restante:', this.gameState.timeLeft);
+            
+            if (this.gameState.timeLeft <= 0) {
+                console.log('⏰ TIEMPO RÁPIDO AGOTADO - Llamando endGame()');
+                this.endGame();
+                return;
+            }
+            
+            // Aumentar dificultad más rápido
+            if (this.gameState.timeLeft % GAME_CONFIG.RAPID.DIFFICULTY_INCREASE_INTERVAL === 0 && 
+                this.gameState.timeLeft < GAME_CONFIG.RAPID.TIME_LIMIT) {
+                this.gameState.difficulty += GAME_CONFIG.RAPID.DIFFICULTY_MULTIPLIER;
+                console.log('⚡ Dificultad rápida aumentada a:', this.gameState.difficulty);
+            }
+        }, 1000);
+    }
+
     startVsTimers() {
+        console.log('⏰ INICIANDO TIMER VS');
+        console.log('🕐 Tiempo inicial VS:', this.gameState.vsTimeLeft);
+        
         this.timerManager.startTimer('vsTimer', () => {
             if (!this.gameState.running) return;
             
             this.gameState.vsTimeLeft--;
+            console.log('⏱️ Tiempo VS restante:', this.gameState.vsTimeLeft);
+            
             this.uiManager.updateVsUI(
                 this.gameState.playerScore, 
                 this.gameState.machineScore, 
@@ -1281,6 +1588,7 @@ class CircleTapGame {
             }
             
             if (this.gameState.vsTimeLeft <= 0) {
+                console.log('⏰ TIEMPO VS AGOTADO - Terminando juego VS');
                 this.endVsGame();
             }
         }, 1000);
@@ -1312,20 +1620,50 @@ class CircleTapGame {
         }, GAME_CONFIG.CLASSIC.MAINTENANCE_INTERVAL, true);
     }
 
-    startVsSpawning() {
-        const spawnCircle = () => {
-            if (!this.gameState.running) return;
+    startRapidSpawning() {
+        console.log('⚡ INICIANDO SPAWN RÁPIDO');
+        const spawnRapidCircle = () => {
+            if (!this.gameState.running) {
+                console.log('⛔ Juego rápido no está corriendo');
+                return;
+            }
             
+            // Verificar límite de círculos
+            if (this.circleManager.circles.length < GAME_CONFIG.RAPID.MAX_CIRCLES) {
+                this.circleManager.createRapidCircle();
+                console.log(`⚡ Próximo círculo rápido en ${GAME_CONFIG.RAPID.SPAWN_RATE}ms`);
+            }
+            
+            this.timerManager.startTimeout('rapidSpawn', spawnRapidCircle, GAME_CONFIG.RAPID.SPAWN_RATE);
+        };
+        
+        console.log('🚀 Iniciando primer círculo rápido...');
+        spawnRapidCircle();
+    }
+
+    startVsSpawning() {
+        console.log('🎯 INICIANDO SPAWN DE CÍRCULOS VS');
+        const spawnCircle = () => {
+            if (!this.gameState.running) {
+                console.log('⛔ Juego no está corriendo, no se pueden crear círculos');
+                return;
+            }
+            
+            console.log('🔵 Creando círculo VS...');
             this.circleManager.createVsCircle();
+            console.log(`⏰ Próximo círculo en ${GAME_CONFIG.VS_MACHINE.SPAWN_RATE}ms`);
             this.timerManager.startTimeout('vsSpawn', spawnCircle, GAME_CONFIG.VS_MACHINE.SPAWN_RATE);
         };
         
+        console.log('🚀 Iniciando primer círculo VS...');
         spawnCircle();
     }
 
     startMachineAI() {
+        console.log('🤖 INICIANDO IA DE LA MÁQUINA');
         const difficulty = this.gameState.machineDifficulty;
         let baseReactionTime = GAME_CONFIG.VS_MACHINE.MACHINE_REACTION_TIME[difficulty];
+        console.log(`⚡ Tiempo de reacción base: ${baseReactionTime}ms para dificultad ${difficulty}`);
         
         const machineAction = async () => {
             if (!this.gameState.running) return;
@@ -1486,17 +1824,32 @@ class CircleTapGame {
     // ========================================================================
 
     endGame() {
+        console.log('🏁 FINALIZANDO JUEGO - Modo:', this.gameState.mode);
         this.gameState.running = false;
         this.timerManager.clearAllTimers();
         this.circleManager.clearAll();
         
-        // Guardar récord del modo clásico
-        const position = this.recordsManager.addClassicRecord(this.gameState.score);
+        // Guardar récord según el modo de juego
+        let position;
+        if (this.gameState.mode === 'rapid') {
+            position = this.recordsManager.addRapidRecord(this.gameState.score);
+            console.log('💾 Récord rápido guardado, posición:', position);
+        } else {
+            position = this.recordsManager.addClassicRecord(this.gameState.score);
+            console.log('💾 Récord clásico guardado, posición:', position);
+        }
         
-        setTimeout(() => this.showGameOverScreen(), 500);
+        console.log('⏰ Esperando 500ms antes de mostrar Game Over...');
+        setTimeout(() => {
+            console.log('🎮 Llamando a showGameOverScreen...');
+            this.showGameOverScreen();
+        }, 500);
     }
 
     endVsGame() {
+        console.log('🏁 FINALIZANDO JUEGO VS MÁQUINA');
+        console.log('📊 Puntuación final - Jugador:', this.gameState.playerScore, 'Máquina:', this.gameState.machineScore);
+        
         this.gameState.running = false;
         this.timerManager.clearAllTimers();
         this.circleManager.clearAll();
@@ -1508,7 +1861,11 @@ class CircleTapGame {
             this.gameState.machineDifficulty
         );
         
-        setTimeout(() => this.showVsResultScreen(), 500);
+        console.log('⏰ Esperando 500ms antes de mostrar resultado VS...');
+        setTimeout(() => {
+            console.log('🏆 Llamando a showVsResultScreen...');
+            this.showVsResultScreen();
+        }, 500);
     }
 
     // ========================================================================
