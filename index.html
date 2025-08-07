@@ -3,28 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>🎯 Circle Tap - Juego Móvil Online</title>
-    <meta name="description" content="🎯 Juego móvil adictivo: toca círculos, compite VS máquina en 4 dificultades, establece récords personales. Sistema de usuarios, PWA offline. ¡Gratis en tu navegador! 🎮">
-    <meta name="keywords" content="juego, móvil, circle tap, juego online, gratis, navegador, PWA, competir, récords">
+    <title>🎯 Circle Tap - Juego Online</title>
+    <meta name="description" content="🎯 Juego adictivo: toca círculos, compite VS máquina en 4 dificultades, establece récords personales. Sistema de usuarios, PWA offline. ¡Gratis en tu navegador! 🎮">
+    <meta name="keywords" content="juego, circle tap, juego online, gratis, navegador, PWA, competir, récords">
     <meta name="author" content="Circle Tap Game">
     
     <!-- PWA Meta tags optimizados -->
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Circle Tap">
     <meta name="application-name" content="Circle Tap">
     <meta name="msapplication-TileColor" content="#667eea">
     <meta name="theme-color" content="#667eea">
     
     <!-- Open Graph para redes sociales -->
-    <meta property="og:title" content="🎯 Circle Tap - Juego Móvil Online">
-    <meta property="og:description" content="🎯 Juego móvil adictivo: toca círculos, compite VS máquina, establece récords. Sistema de usuarios, PWA offline. ¡Gratis!"
+    <meta property="og:title" content="🎯 Circle Tap - Juego Online">
+    <meta property="og:description" content="🎯 Juego adictivo: toca círculos, compite VS máquina, establece récords. Sistema de usuarios, PWA offline. ¡Gratis!"
     <meta property="og:type" content="website">
     <meta property="og:url" content="">
     <meta property="og:image" content="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
     
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="pause-styles.css">
     <link rel="manifest" href="manifest.json">
     
     <!-- Iconos para diferentes dispositivos -->
@@ -33,6 +30,11 @@
 </head>
 <body>
     <div class="game-container">
+        <!-- Notificación de ventana pequeña -->
+        <div id="small-window-notice" class="small-window-notice">
+            📏 Para una mejor experiencia de juego, se recomienda una ventana más grande (mínimo 800px de ancho)
+        </div>
+        
         <!-- Pantalla de login -->
         <div id="login-screen" class="screen">
             <h1>🎯 Circle Tap</h1>
@@ -56,46 +58,8 @@
                         }
                     ">👁️</button>
                 </div>
-                <button class="login-btn" id="login-btn" onclick="
-                    const loginButton = document.getElementById('login-btn');
-                    if (window.handleAuth) {
-                        window.handleAuth();
-                    } else if (window.game) {
-                        if (loginButton.textContent === 'Crear Cuenta') {
-                            window.game.register();
-                        } else {
-                            window.game.login();
-                        }
-                    } else {
-                        console.error('Game not loaded yet');
-                    }
-                ">Entrar</button>
-                <button class="register-btn" id="register-btn" onclick="
-                    if (window.toggleMode) {
-                        window.toggleMode();
-                    } else {
-                        const loginBtnElement = document.getElementById('login-btn');
-                        const registerBtnElement = document.getElementById('register-btn');
-                        const titleElement = document.querySelector('.login-form h2');
-                        
-                        if (registerBtnElement.textContent === 'Registrarse') {
-                            // Cambiar a modo registro
-                            loginBtnElement.textContent = 'Crear Cuenta';
-                            registerBtnElement.textContent = 'Ya tengo cuenta';
-                            titleElement.textContent = 'Registrarse';
-                        } else {
-                            // Cambiar a modo login
-                            loginBtnElement.textContent = 'Entrar';
-                            registerBtnElement.textContent = 'Registrarse';
-                            titleElement.textContent = 'Iniciar Sesión';
-                        }
-                        
-                        // Limpiar campos
-                        document.getElementById('username').value = '';
-                        document.getElementById('password').value = '';
-                        document.getElementById('login-error').textContent = '';
-                    }
-                ">Registrarse</button>
+                <button class="login-btn" id="login-btn">Entrar</button>
+                <button class="register-btn" id="register-btn">Registrarse</button>
                 <div id="login-error" class="error-message"></div>
             </div>
         </div>
@@ -108,19 +72,56 @@
                 <button class="logout-btn" id="logout-btn" onclick="gameLogout()">Cerrar Sesión</button>
             </div>
             <p>¡Toca los círculos antes de que desaparezcan!</p>
-            <button id="classic-btn" class="btn">🎮 Modo Clásico</button>
-            <button id="rapid-btn" class="btn rapid">⚡ Modo Rápido</button>
-            <button id="vs-machine-btn" class="btn secondary">🤖 VS Máquina</button>
+            
+            <!-- Botones de modo con descripción -->
+            <div class="game-modes">
+                <button id="classic-btn" class="mode-card classic-mode">
+                    <div class="mode-icon">🎮</div>
+                    <div class="mode-title">Modo Clásico</div>
+                    <div class="mode-description">60 segundos para conseguir la mayor puntuación. Los círculos no desaparecen solos.</div>
+                </button>
+                
+                <button id="rapid-btn" class="mode-card rapid-mode">
+                    <div class="mode-icon">⚡</div>
+                    <div class="mode-title">Modo Rápido</div>
+                    <div class="mode-description">Siempre hay 5 círculos en pantalla. Pasa el mouse por encima, ¡desaparecen automáticamente!</div>
+                </button>
+                
+                <button id="vs-machine-btn" class="mode-card vs-mode full-width">
+                    <div class="mode-icon">🤖</div>
+                    <div class="mode-title">VS Máquina</div>
+                    <div class="mode-description">Compite contra la IA. Elige tu nivel de dificultad y demuestra tu habilidad.</div>
+                </button>
+            </div>
+            
             <button id="records-btn" class="btn tertiary">🏆 Récords</button>
+            <button id="reset-overlays-btn" class="btn quaternary">📖 Ver Explicaciones Nuevamente</button>
+            
             <div class="instructions">
-                <p>📱 Optimizado para móviles</p>
                 <p>🎮 Toca rápido para conseguir puntos</p>
-                <p>⚡ Modo Rápido: PC (pasar mouse) | Móvil (tocar)</p>
+                <p>⚡ Modo Rápido: Pasa el mouse sobre los círculos</p>
+            </div>
+            
+            <!-- Estadísticas de la página -->
+            <div class="page-stats">
+                <div class="stat-item">
+                    <span class="stat-icon">👥</span>
+                    <span class="stat-label">Visitas totales:</span>
+                    <span id="total-visits" class="stat-value">0</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-icon">🟢</span>
+                    <span class="stat-label">Usuarios activos:</span>
+                    <span id="active-users" class="stat-value">0</span>
+                </div>
             </div>
         </div>
 
         <!-- Pantalla de selección de dificultad -->
         <div id="difficulty-screen" class="screen hidden">
+            <!-- Botón flotante para cerrar -->
+            <button id="back-btn" class="btn-close-floating">✕</button>
+            
             <h2>🤖 Competencia VS Máquina</h2>
             <p>Elige tu nivel de desafío:</p>
             <div class="difficulty-buttons">
@@ -141,7 +142,6 @@
                     <span class="difficulty-desc">5 círculos/segundo</span>
                 </button>
             </div>
-            <button id="back-btn" class="btn back-btn">⬅ Volver</button>
         </div>
 
         <!-- Pantalla de juego -->
@@ -149,8 +149,11 @@
             <div class="ui-bar">
                 <div class="score">Puntos: <span id="score">0</span></div>
                 <div class="time">Tiempo: <span id="time">30</span>s</div>
+                <button id="pause-btn" class="pause-btn">⏸️ Pausar</button>
             </div>
-            <div id="game-area"></div>
+            <div id="game-area">
+                <div class="game-play-area"></div>
+            </div>
         </div>
 
         <!-- Pantalla de juego VS Máquina -->
@@ -166,28 +169,101 @@
                         <span id="difficulty-name">Fácil</span>
                         <span id="difficulty-rate">1 bps</span>
                     </div>
+                    <button id="vs-pause-btn" class="pause-btn">⏸️ Pausar</button>
                 </div>
                 <div class="machine-section">
                     <div class="machine-title">🤖 MÁQUINA</div>
                     <div class="machine-score">Puntos: <span id="machine-score">0</span></div>
                 </div>
             </div>
-            <div id="vs-game-area"></div>
+            <div id="vs-game-area">
+                <div class="vs-game-play-area"></div>
+            </div>
+        </div>
+
+        <!-- Pantalla de pausa -->
+        <div id="pause-screen" class="screen hidden">
+            <div class="content-center">
+                <h1>⏸️ JUEGO PAUSADO</h1>
+                <p>El juego está temporalmente pausado</p>
+                <div class="buttons">
+                    <button id="resume-btn" class="btn">▶️ Continuar</button>
+                    <button id="pause-menu-btn" class="btn secondary">🏠 Menú Principal</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pantalla de Tutorial -->
+        <div id="tutorial-screen" class="screen hidden">
+            <div class="tutorial-container">
+                <div class="tutorial-header">
+                    <h1 id="tutorial-title">🎮 Tutorial - Paso 1/7</h1>
+                    <button id="tutorial-skip" class="btn-skip">⏩ Saltar Tutorial</button>
+                </div>
+                
+                <div class="tutorial-content">
+                    <div id="tutorial-text" class="tutorial-text">
+                        <!-- El contenido se actualiza dinámicamente -->
+                    </div>
+                    
+                    <div id="tutorial-demo-area" class="tutorial-demo-area">
+                        <!-- Área para demostraciones interactivas -->
+                    </div>
+                </div>
+                
+                <div class="tutorial-controls">
+                    <button id="tutorial-prev" class="btn secondary" disabled>⬅️ Anterior</button>
+                    <div class="tutorial-progress">
+                        <div id="tutorial-progress-bar" class="tutorial-progress-bar">
+                            <div id="tutorial-progress-fill" class="tutorial-progress-fill"></div>
+                        </div>
+                        <span id="tutorial-step-counter">1 / 7</span>
+                    </div>
+                    <button id="tutorial-next" class="btn">Siguiente ➡️</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Overlay Informativo -->
+        <div id="info-overlay" class="info-overlay hidden">
+            <div class="info-overlay-backdrop"></div>
+            <div class="info-overlay-content">
+                <div class="info-overlay-header">
+                    <h2 id="info-overlay-title">🎮 Modo de Juego</h2>
+                    <button id="info-overlay-close" class="info-overlay-close">✕</button>
+                </div>
+                <div id="info-overlay-text" class="info-overlay-text">
+                    <!-- Contenido dinámico -->
+                </div>
+                <div class="info-overlay-actions">
+                    <button id="info-overlay-start" class="info-overlay-btn primary">
+                        🎮 ¡Comenzar a Jugar!
+                    </button>
+                    <button id="info-overlay-skip" class="info-overlay-btn secondary">
+                        🏠 Regresar al Menú
+                    </button>
+                </div>
+            </div>
         </div>
 
         <!-- Pantalla de game over -->
         <div id="game-over-screen" class="screen hidden">
+            <!-- Botón flotante para cerrar -->
+            <button id="menu-btn" class="btn-close-floating">✕</button>
+            
             <h2>🎮 Juego Terminado</h2>
             <div class="final-score">
                 <p>Puntuación Final:</p>
                 <span id="final-score">0</span>
             </div>
             <button id="restart-btn" class="btn">Jugar de Nuevo</button>
-            <button id="menu-btn" class="btn secondary">Menú Principal</button>
         </div>
 
         <!-- Pantalla de resultado VS Máquina -->
         <div id="vs-result-screen" class="screen hidden">
+            <!-- Botón flotante para cerrar -->
+            <button id="vs-menu-btn" class="btn-close-floating">✕</button>
+            
             <div id="vs-result-content">
                 <h2 id="vs-result-title">🎮 Resultado</h2>
                 <div class="vs-final-scores">
@@ -204,17 +280,25 @@
                 <div id="vs-result-message"></div>
             </div>
             <button id="vs-restart-btn" class="btn">Revancha</button>
-            <button id="vs-menu-btn" class="btn secondary">Menú Principal</button>
         </div>
 
         <!-- Pantalla de récords -->
         <div id="records-screen" class="screen hidden">
+            <!-- Botón flotante para cerrar -->
+            <button id="records-back-btn" class="btn-close-floating">✕</button>
+            
             <h2>🏆 Tabla de Récords</h2>
+            
+            <!-- Pestañas de modos -->
+            <div class="records-tabs">
+                <button class="tab-btn active" data-mode="classic">🎮 Clásico</button>
+                <button class="tab-btn" data-mode="rapid">⚡ Rápido</button>
+                <button class="tab-btn" data-mode="vs">🤖 VS Máquina</button>
+            </div>
             
             <div class="records-container">
                 <!-- Récords Modo Clásico -->
-                <div class="records-section">
-                    <h3>🎮 Modo Clásico</h3>
+                <div class="records-section" data-mode="classic">
                     <div class="record-item best-classic">
                         <div class="record-label">🥇 Mejor Puntuación</div>
                         <div class="record-value" id="best-classic-score">0</div>
@@ -233,8 +317,7 @@
                 </div>
 
                 <!-- Récords Modo Rápido -->
-                <div class="records-section">
-                    <h3>⚡ Modo Rápido</h3>
+                <div class="records-section hidden" data-mode="rapid">
                     <div class="record-item best-rapid">
                         <div class="record-label">🥇 Mejor Puntuación</div>
                         <div class="record-value" id="best-rapid-score">0</div>
@@ -244,7 +327,6 @@
                             <span>Pos.</span>
                             <span>Usuario</span>
                             <span>Puntuación</span>
-                            <span>Tiempo</span>
                         </div>
                         <div id="rapid-records-list" class="records-entries">
                             <!-- Se llenará dinámicamente -->
@@ -253,7 +335,7 @@
                 </div>
 
                 <!-- Récords VS Máquina -->
-                <div class="records-section">
+                <div class="records-section hidden" data-mode="vs">
                     <h3>🤖 VS Máquina</h3>
                     
                     <!-- Pestañas de dificultad -->
@@ -298,13 +380,10 @@
                     </div>
                 </div>
             </div>
-
-            <div class="records-actions">
-                <button id="records-back-btn" class="btn secondary">⬅ Volver</button>
-            </div>
         </div>
     </div>
 
     <script src="script.js"></script>
+    <script src="security.js"></script>
 </body>
 </html>
