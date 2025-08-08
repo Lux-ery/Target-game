@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 Panel de Administración - Circle Tap</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .admin-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            width: min(500px, 90vw);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.8rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .login-section {
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 1rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .input-group input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .admin-actions {
+            display: none;
+        }
+
+        .admin-actions.visible {
+            display: block;
+        }
+
+        .action-btn {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(45deg, #fdcb6e, #e17055);
+            color: white;
+        }
+
+        .btn-info {
+            background: linear-gradient(45deg, #74b9ff, #0984e3);
+            color: white;
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #00b894, #00a085);
+            color: white;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .status {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-family: monospace;
+            min-height: 100px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .error {
+            color: #ff6b6b;
+        }
+
+        .success {
+            color: #00b894;
+        }
+
+        .warning {
+            color: #fdcb6e;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-link a {
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .back-link a:hover {
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <h1>🔧 Panel de Administración</h1>
+        
+        <!-- Sección de Login -->
+        <div class="login-section" id="login-section">
+            <div class="input-group">
+                <input type="password" id="admin-password" placeholder="🔒 Contraseña de administrador" />
+            </div>
+            <button class="action-btn btn-success" onclick="login()">🔑 Acceder</button>
+        </div>
+
+        <!-- Sección de Administración -->
+        <div class="admin-actions" id="admin-actions">
+            <button class="action-btn btn-info" onclick="showStats()">📊 Ver Estadísticas</button>
+            <button class="action-btn btn-warning" onclick="clearRecords()">🗑️ Reiniciar Récords</button>
+            <button class="action-btn btn-warning" onclick="clearUsers()">👥 Reiniciar Usuarios</button>
+            <button class="action-btn btn-danger" onclick="clearAll()">💥 REINICIAR TODO</button>
+            <button class="action-btn btn-info" onclick="exportData()">📥 Exportar Datos</button>
+        </div>
+
+        <!-- Status/Output -->
+        <div class="status" id="status">
+            <div class="warning">🔒 Ingresa la contraseña para acceder...</div>
+        </div>
+
+        <div class="back-link">
+            <a href="index.html">← Volver al juego</a>
+        </div>
+    </div>
+
+    <script>
+        const ADMIN_PASSWORD = "19822891"; // Cambia esta contraseña
+        let isLoggedIn = false;
+
+        function login() {
+            const password = document.getElementById('admin-password').value;
+            const status = document.getElementById('status');
+            
+            if (password === ADMIN_PASSWORD) {
+                isLoggedIn = true;
+                document.getElementById('login-section').classList.add('hidden');
+                document.getElementById('admin-actions').classList.add('visible');
+                status.innerHTML = '<div class="success">✅ Acceso autorizado - Panel de administración activo</div>';
+            } else {
+                status.innerHTML = '<div class="error">❌ Contraseña incorrecta</div>';
+                document.getElementById('admin-password').value = '';
+            }
+        }
+
+        function showStats() {
+            if (!isLoggedIn) return;
+            
+            const status = document.getElementById('status');
+            let output = '<div class="success">📊 ESTADÍSTICAS DEL JUEGO</div><br>';
+            
+            try {
+                // Récords clásicos
+                const classicRecords = JSON.parse(localStorage.getItem('circletap_classic_records') || '[]');
+                output += `🎯 Récords Clásicos: ${classicRecords.length}<br>`;
+                
+                // Récords rápidos
+                const rapidRecords = JSON.parse(localStorage.getItem('circletap_rapid_records') || '[]');
+                output += `⚡ Récords Rápidos: ${rapidRecords.length}<br>`;
+                
+                // Récords VS
+                const vsRecords = JSON.parse(localStorage.getItem('circletap_vs_records') || '{}');
+                let totalVs = 0;
+                for (let diff in vsRecords) {
+                    totalVs += (vsRecords[diff] || []).length;
+                }
+                output += `🤖 Récords VS Máquina: ${totalVs}<br>`;
+                
+                // Usuarios
+                const users = JSON.parse(localStorage.getItem('circleTapUsers') || '{}');
+                output += `👥 Usuarios registrados: ${Object.keys(users).length}<br>`;
+                
+                // Visitas
+                const visits = localStorage.getItem('circleTapTotalVisits') || '0';
+                output += `📈 Total de visitas: ${visits}<br>`;
+                
+                // Usuarios activos
+                const activeSessions = JSON.parse(localStorage.getItem('circleTapActiveSessions') || '{}');
+                output += `🟢 Usuarios activos: ${Object.keys(activeSessions).length}<br>`;
+                
+            } catch (error) {
+                output += `<div class="error">❌ Error al cargar estadísticas: ${error.message}</div>`;
+            }
+            
+            status.innerHTML = output;
+        }
+
+        function clearRecords() {
+            if (!isLoggedIn) return;
+            
+            if (confirm('⚠️ ¿Estás seguro de que quieres ELIMINAR TODOS LOS RÉCORDS?')) {
+                try {
+                    localStorage.removeItem('circletap_classic_records');
+                    localStorage.removeItem('circletap_rapid_records');
+                    localStorage.removeItem('circletap_vs_records');
+                    localStorage.removeItem('circletap_vs_stats');
+                    
+                    document.getElementById('status').innerHTML = 
+                        '<div class="success">✅ Todos los récords han sido eliminados<br>🔄 Recarga la página del juego para ver los cambios</div>';
+                } catch (error) {
+                    document.getElementById('status').innerHTML = 
+                        `<div class="error">❌ Error: ${error.message}</div>`;
+                }
+            }
+        }
+
+        function clearUsers() {
+            if (!isLoggedIn) return;
+            
+            if (confirm('⚠️ ¿Estás seguro de que quieres ELIMINAR TODOS LOS USUARIOS?')) {
+                try {
+                    localStorage.removeItem('circleTapUsers');
+                    localStorage.removeItem('circleTapCurrentUser');
+                    
+                    document.getElementById('status').innerHTML = 
+                        '<div class="success">✅ Todos los usuarios han sido eliminados<br>🔄 Recarga la página del juego para ver los cambios</div>';
+                } catch (error) {
+                    document.getElementById('status').innerHTML = 
+                        `<div class="error">❌ Error: ${error.message}</div>`;
+                }
+            }
+        }
+
+        function clearAll() {
+            if (!isLoggedIn) return;
+            
+            if (confirm('🚨 ADVERTENCIA CRÍTICA 🚨\n\n¿Estás COMPLETAMENTE seguro de que quieres REINICIAR TODO EL JUEGO?\n\nEsto eliminará:\n- Todos los récords\n- Todos los usuarios\n- Todas las estadísticas\n\nEsta acción NO se puede deshacer.')) {
+                try {
+                    // Eliminar todos los datos del juego
+                    localStorage.removeItem('circletap_classic_records');
+                    localStorage.removeItem('circletap_rapid_records');
+                    localStorage.removeItem('circletap_vs_records');
+                    localStorage.removeItem('circletap_vs_stats');
+                    localStorage.removeItem('circleTapUsers');
+                    localStorage.removeItem('circleTapCurrentUser');
+                    localStorage.removeItem('circleTapTotalVisits');
+                    localStorage.removeItem('circleTapActiveSessions');
+                    localStorage.removeItem('circleTapPlayedModes');
+                    
+                    document.getElementById('status').innerHTML = 
+                        '<div class="success">✅ REINICIO COMPLETO EXITOSO<br>🔄 Recarga la página del juego para ver los cambios<br>🎮 El juego volverá a estar como nuevo</div>';
+                } catch (error) {
+                    document.getElementById('status').innerHTML = 
+                        `<div class="error">❌ Error durante el reinicio: ${error.message}</div>`;
+                }
+            }
+        }
+
+        function exportData() {
+            if (!isLoggedIn) return;
+            
+            try {
+                const data = {
+                    classicRecords: JSON.parse(localStorage.getItem('circletap_classic_records') || '[]'),
+                    rapidRecords: JSON.parse(localStorage.getItem('circletap_rapid_records') || '[]'),
+                    vsRecords: JSON.parse(localStorage.getItem('circletap_vs_records') || '{}'),
+                    vsStats: JSON.parse(localStorage.getItem('circletap_vs_stats') || '{}'),
+                    users: Object.keys(JSON.parse(localStorage.getItem('circleTapUsers') || '{}')),
+                    totalVisits: localStorage.getItem('circleTapTotalVisits') || '0',
+                    exportDate: new Date().toISOString()
+                };
+                
+                const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `circle-tap-backup-${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                document.getElementById('status').innerHTML = 
+                    '<div class="success">✅ Datos exportados exitosamente<br>📁 Archivo descargado</div>';
+            } catch (error) {
+                document.getElementById('status').innerHTML = 
+                    `<div class="error">❌ Error al exportar: ${error.message}</div>`;
+            }
+        }
+
+        // Enter key para login
+        document.getElementById('admin-password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                login();
+            }
+        });
+    </script>
+</body>
+</html>
